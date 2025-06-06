@@ -1,6 +1,8 @@
 // backend/routes/aiSuggest.js
-import express from 'express';
-import OpenAI from 'openai';
+// import express from 'express';
+// import OpenAI from 'openai';
+const express = require('express');
+const OpenAI = require('openai');
 
 const router = express.Router();
 
