@@ -31,6 +31,7 @@ const allowedOrigins = [
     'http://localhost:3011',     
     'https://thitracnghiem.dokhactu.site',     
     'https://thitracnghiemadmin.dokhactu.site',     
+    'https://backendthitracnghiem.dokhactu.site',     
 ];
 
 app.use(cors({
