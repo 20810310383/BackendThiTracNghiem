@@ -1,0 +1,217 @@
+const BoDe = require('../../model/BoDe');
+const CapHoc = require('../../model/CapHoc');
+const MonHoc = require('../../model/MonHoc');
+
+require('dotenv').config();
+
+module.exports = {
+
+    getDeThi: async (req, res) => {
+        try {
+            let filter = {};
+            
+            if (req.query.nguoiTao) {
+                if (Array.isArray(req.query.nguoiTao)) {
+                    filter.nguoiTao = { $in: req.query.nguoiTao };
+                } else if (typeof req.query.nguoiTao === 'string' && req.query.nguoiTao.includes(',')) {
+                    const arrnguoiTao = req.query.nguoiTao.split(',').map(item => item.trim());
+                    filter.nguoiTao = { $in: arrnguoiTao };
+                } else {
+                    filter.nguoiTao = req.query.nguoiTao;
+                }
+            }
+
+            if (req.query.ten) {
+                filter.ten = { $regex: (req.query.ten).trim(), $options: 'i' }; // không phân biệt hoa thường
+            }
+
+            // Lọc theo monHoc (ObjectId)
+            if (req.query.monHoc) {
+                if (Array.isArray(req.query.monHoc)) {
+                    filter.monHoc = { $in: req.query.monHoc };
+                } else if (typeof req.query.monHoc === 'string' && req.query.monHoc.includes(',')) {
+                    const arrMonHoc = req.query.monHoc.split(',').map(item => item.trim());
+                    filter.monHoc = { $in: arrMonHoc };
+                } else {
+                    filter.monHoc = req.query.monHoc;
+                }
+            }
+
+
+            // Lọc theo capHoc (ObjectId)
+            if (req.query.capHoc) {
+                if (Array.isArray(req.query.capHoc)) {
+                    // Nếu client truyền dưới dạng mảng (ví dụ Axios GET với params kiểu: ?capHoc=1&capHoc=2)
+                    filter.capHoc = { $in: req.query.capHoc };
+                } else if (typeof req.query.capHoc === 'string' && req.query.capHoc.includes(',')) {
+                    // Nếu client truyền ?capHoc=1,2,3 (chuỗi có dấu phẩy)
+                    const arrCapHoc = req.query.capHoc.split(',').map(item => item.trim());
+                    filter.capHoc = { $in: arrCapHoc };
+                } else {
+                    // Nếu chỉ 1 giá trị
+                    filter.capHoc = req.query.capHoc;
+                }
+            }
+
+            if( req.query.phamViShare) {
+                if (req.query.phamViShare === 'congkhai') {
+                    filter.phamViShare = true; // Chỉ lấy đề thi công khai
+                } else if (req.query.phamViShare === 'riengtu') {
+                    filter.phamViShare = false; // Chỉ lấy đề thi riêng tư
+                }
+            }
+      
+
+            const deThiList = await BoDe.find(filter).populate('monHoc capHoc thoiGianThi nguoiTao');
+            console.log("deThiList: ", deThiList);
+            
+
+            res.status(200).json({ data: deThiList, message: "Lấy danh sách đề thi thành công", errCode: 0 });
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách đề thi:', error);
+            res.status(500).json({ message: 'Lỗi server' });
+        }
+    },
+
+    getDetailDeThi: async (req,res) => {
+        try {
+            const {id} = req.query
+
+            let sp = await BoDe.findById(id).populate("monHoc capHoc thoiGianThi nguoiTao")
+            if(sp) {
+                return res.status(200).json({
+                    data: sp,
+                    message: "Đã có thông tin chi tiết!"
+                })
+            } else {
+                return res.status(500).json({
+                    message: "Thông tin chi tiết thất bại!"
+                })
+            }
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: "Có lỗi xảy ra.",
+                error: error.message,
+            });
+        }
+    },
+
+
+    getOneDeThi: async (req, res) => {
+        try {
+            const deThiList = await BoDe.findOne({_id: req.query._id}).populate('monHoc capHoc thoiGianThi nguoiTao')
+            if (!deThiList) {
+                return res.status(404).json({ message: 'Không tìm thấy đề thi' });
+            }
+            res.status(200).json({data: deThiList, message: "Lấy danh sách đề thi thành công", errCode: 0});
+        } catch (error) {
+            console.error('Lỗi khi lấy danh sách đề thi:', error);
+            res.status(500).json({ message: 'Lỗi server' });
+        }
+    },
+
+    createDeThi: async (req, res) => {
+        try {
+            const newDeThi = new BoDe(req.body); 
+            const savedDeThi = await newDeThi.save(); 
+            
+            return res.status(201).json({
+                message: "Bạn đã thêm đề thi thành công!",
+                errCode: 0,
+                data: savedDeThi
+            });
+
+        } catch (error) {
+            console.error('Lỗi khi tạo đề thi:', error);
+            return res.status(500).json({ 
+                message: 'Lỗi server khi tạo đề thi', 
+                errCode: -1 
+            });
+        }
+    },
+
+
+    updateProduct: async (req, res) => {
+        try {
+            let {_id, ten, matKhau, Image, monHoc, capHoc, moTa, thoiGianThi, cauHoi, nguoiTao, phamViShare} = req.body
+
+            let updateTL = await BoDe.updateOne({_id: _id},{ten, matKhau, Image, monHoc, capHoc, moTa, thoiGianThi, cauHoi, nguoiTao, phamViShare})
+
+            if(updateTL) {
+                return res.status(200).json({
+                    data: updateTL,
+                    message: "Chỉnh sửa đề thi thành công"
+                })
+            } else {
+                return res.status(404).json({                
+                    message: "Chỉnh sửa đề thi thất bại"
+                })
+            }
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: "Có lỗi xảy ra.",
+                error: error.message,
+            });
+        }
+    },
+
+    deleteBode: async (req, res) => {
+        try {
+            const _id = req.params.id
+            let xoaTL = await BoDe.deleteOne({_id: _id})
+
+            if(xoaTL) {
+                return res.status(200).json({
+                    data: xoaTL,
+                    message: "Bạn đã xoá bộ đề thành công!"
+                })
+            } else {
+                return res.status(500).json({
+                    message: "Bạn đã xoá bộ đề thất bại!"
+                })
+            }
+
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({
+                message: "Có lỗi xảy ra.",
+                error: error.message,
+            });
+        }
+    },
+
+    countBoDeByMonHoc: async (req, res) => {
+        try {
+            // Lấy tất cả các môn học
+            const monHocs = await MonHoc.find();
+
+            // Duyệt từng môn học → đếm số bộ đề liên kết
+            const result = await Promise.all(
+                monHocs.map(async (monHoc) => {
+                    const count = await BoDe.countDocuments({ monHoc: monHoc._id });
+                    return {
+                        _id: monHoc._id,
+                        ten: monHoc.ten,
+                        Image: monHoc.Image,
+                        soBoDe: count
+                    };
+                })
+            );
+
+            res.status(200).json({
+                message: 'Thống kê số bộ đề theo môn học',
+                data: result
+            });
+        } catch (error) {
+            console.error('Lỗi khi đếm bộ đề theo môn học:', error);
+            res.status(500).json({
+                message: 'Lỗi server khi đếm bộ đề',
+                errCode: -1
+            });
+        }
+    }
+}
