@@ -29,6 +29,8 @@ connectDB();
 const allowedOrigins = [
     'http://localhost:3010', 
     'http://localhost:3011',     
+    'https://thitracnghiem.dokhactu.site',     
+    'https://thitracnghiemadmin.dokhactu.site',     
 ];
 
 app.use(cors({
