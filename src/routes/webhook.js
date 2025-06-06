@@ -7,6 +7,8 @@ const router = express.Router();
 const secret = process.env.WEBHOOK_SECRET;
 
 router.post('/webhook', (req, res) => {
+     console.log('📥 Webhook received:', new Date().toISOString());
+
   const signature = req.headers['x-hub-signature-256'];
   const payload = JSON.stringify(req.body);
   const hmac = crypto.createHmac('sha256', secret);
