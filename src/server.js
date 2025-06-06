@@ -9,6 +9,8 @@ const monHoc = require('./routes/monhocRouter');
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
 const aiSuggestRouter = require('./routes/aiSuggest');
+const webhookRoute = require('./routes/webhook');
+
 const cors = require('cors');
 const multer = require('multer');
 const path = require('path');
@@ -18,6 +20,7 @@ const WebSocket = require('ws'); // Thêm thư viện WebSocket
 const cleanUploads = require('./utils/cleanUploads');
 
 require("dotenv").config();
+
 
 let app = express();
 let port = process.env.PORT || 6969;
@@ -56,6 +59,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Đặt thư mục public/uploads làm public để có thể truy cập
 app.use('/uploads', express.static(path.join(__dirname, './public/uploads')));
+app.use('/webhook', webhookRoute);
 
 
 // Config app
