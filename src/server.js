@@ -59,7 +59,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 // Đặt thư mục public/uploads làm public để có thể truy cập
 app.use('/uploads', express.static(path.join(__dirname, './public/uploads')));
-app.use('/webhook', webhookRoute);
+// app.use('/webhook', webhookRoute);s
 
 
 // Config app
