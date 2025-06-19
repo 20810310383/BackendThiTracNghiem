@@ -167,51 +167,6 @@ module.exports = {
     },
     
 
-    registerAccKH1: async (req, res) => {
-
-        const {email, password, fullName, address, phone, gender} = req.body     
-        
-        console.log("email, password, fullName, address, phone, gender: ", email, password, fullName, address, phone, gender);
-        
-       try {
-            const check = await AccKH.findOne({email: email})
-
-            // if (check) {
-            //     // Kiểm tra xem tài khoản có bị xóa không
-            //     if (check.deleted) {
-            //         // Tài khoản đã bị xóa (xóa mềm), phục hồi tài khoản này
-            //         await AccKH.restore({ _id: check._id });
-            //         check = await AccKH.findOne({ email: email }); // Lấy lại thông tin tài khoản sau khi phục hồi
-            //     } else {
-            //         return res.status(400).json({
-            //             message: "Tồn tại tài khoản!"
-            //         });
-            //     }
-            // }
-
-            if(check) {
-                return res.status(400).json({ 
-                    success: false, 
-                    message: 'Tài Khoản Đã Tồn Tại! Vui Lòng Chọn Email Khác!' 
-                });
-            } else {
-                // một chuỗi đã được mã hóa có thể lưu vào cơ sở dữ liệu.
-                const hashedPassword = await bcrypt.hash(password, 10);
-
-                let dangKy = await AccKH.create({
-                    email, password: hashedPassword, fullName, address, phone, gender
-                })        
-                return res.status(201).json({ 
-                    success: true, 
-                    message: 'Đăng ký tài khoản thành công', 
-                    data: dangKy 
-                });
-            }
-        } catch (error) {
-            return res.status(500).json({ success: false , message: error });
-        }
-    },
-
     xacThucOTP: async (req, res) => {
         const { otp, email } = req.body;
     

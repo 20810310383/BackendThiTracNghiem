@@ -4,6 +4,7 @@ const { OAuth2Client } = require('google-auth-library');
 const jwt = require('jsonwebtoken');
 const User = require('../model/User');
 const { logoutAdmin } = require('../controllers/Login/logout.controller');
+const { registerUser, verifyOtp, resendOtpCode, loginUser, verifyToken } = require('../controllers/Login/login.regisrer.controller');
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -66,5 +67,18 @@ router.post('/google', async (req, res) => {
 });
 
 router.post("/logout-admin", logoutAdmin );
+
+router.post("/register-user", registerUser );
+router.post("/xac-thuc-otp", verifyOtp );
+router.post("/resend-otp", resendOtpCode );
+router.post("/login-user", loginUser );
+router.get('/me', verifyToken, (req, res) => {
+  return res.status(200).json({
+    success: true,
+    data: {
+      user: req.user
+    }
+  });
+});
 
 module.exports = router;

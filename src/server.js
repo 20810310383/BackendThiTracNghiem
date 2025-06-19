@@ -31,7 +31,8 @@ connectDB();
 // Cài đặt CORS
 const allowedOrigins = [
     'http://localhost:3010', 
-    'http://localhost:3011',     
+    'http://localhost:3011',    
+    // 'http://localhost:8081' ,   //app
     'https://thitracnghiem.dokhactu.site',     
     'https://thitracnghiemadmin.dokhactu.site',     
     'https://backendthitracnghiem.dokhactu.site',     

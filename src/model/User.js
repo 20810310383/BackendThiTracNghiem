@@ -5,6 +5,10 @@ const userSchema = new mongoose.Schema({
     Image: { type: String, },              // Ví dụ: "Nguyễn Văn A"
     email: { type: String, },
     matKhau: { type: String, },
+    otp: { type: String },
+    otpExpires: { type: Date },
+
+    isActive: { type: Boolean, default: false }, // ✅ Thêm trường isActive
 
     vaiTro: {
         type: String,
