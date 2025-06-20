@@ -7,6 +7,7 @@ const nodemailer = require('nodemailer');
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const User = require('../../model/User');
+const { log } = require('console');
 
 // Tạo transporter để gửi email
 const transporter = nodemailer.createTransport({
@@ -213,12 +214,16 @@ module.exports = {
         const token = req.headers['authorization']?.split(' ')[1]; // Lấy token từ header
 
         if (!token) {
+            console.log("Không có token!");
+            
             return res.status(401).json({ success: false, message: 'Không có token!' });
         }
+        console.log(">>> token: ", token);
+        
 
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET); // Giải mã token
-            const user = await User.findById(decoded.id).select('-matKhau'); // Lấy user
+            const user = await User.findById(decoded.userId).select('-matKhau'); // Lấy user
 
             if (!user || !user.isActive) {
             return res.status(401).json({ success: false, message: 'Tài khoản không hợp lệ!' });
@@ -230,5 +235,25 @@ module.exports = {
             return res.status(401).json({ success: false, message: 'Token không hợp lệ!' });
         }
     },
+
+    logoutUser: async (req, res) => {
+        try {
+            // Nếu bạn dùng cookie lưu token:
+            res.clearCookie('access_token');
+
+            // Nếu không dùng cookie (token lưu ở localStorage phía client)
+            return res.status(200).json({
+                success: true,
+                message: 'Đăng xuất thành công!'
+            });
+        } catch (error) {
+            console.error("Lỗi khi đăng xuất:", error);
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi máy chủ!'
+            });
+        }
+    }
+
 
 }
