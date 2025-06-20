@@ -18,6 +18,9 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+const generateRandomPassword = () => {
+  return Math.random().toString(36).slice(-6); // Ví dụ: 'x9b2k1'
+};
 
 module.exports = {
     registerUser: async (req, res) => {
@@ -253,7 +256,73 @@ module.exports = {
                 message: 'Lỗi máy chủ!'
             });
         }
-    }
+    },
+
+    resetPassword: async (req, res) => {
+        const { email } = req.body;
+
+        try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(400).json({
+            success: false,
+            message: 'Email không tồn tại trong hệ thống!',
+            });
+        }
+
+        const newPassword = generateRandomPassword();
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+        user.matKhau = hashedPassword;
+        await user.save();
+
+        await transporter.sendMail({
+            from: process.env.EMAIL_USER,
+            to: email,
+            subject: 'Mật khẩu mới từ hệ thống',
+            html: `
+                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; border: 1px solid #ddd; padding: 24px; border-radius: 12px; background-color: #f9f9f9;">
+                    <h2 style="text-align: center; color: #2e6eff;">HỆ THỐNG THI TRẮC NGHIỆM</h2>
+                    <hr style="border: none; border-top: 1px solid #ccc; margin: 16px 0;">
+                    
+                    <p>Xin chào,</p>
+
+                    <p>Chúng tôi đã tiếp nhận yêu cầu lấy lại mật khẩu của bạn trên hệ thống <strong>thi trắc nghiệm</strong>.</p>
+
+                    <p>Mật khẩu mới của bạn là:</p>
+
+                    <div style="background-color: #eef5ff; padding: 12px 24px; border-radius: 8px; font-size: 22px; text-align: center; font-weight: bold; letter-spacing: 1px; color: #2e6eff; border: 1px dashed #2e6eff;">
+                    ${newPassword}
+                    </div>
+
+                    <p style="margin-top: 24px;">
+                    👉 Vui lòng <strong>đăng nhập lại</strong> và đổi mật khẩu sau khi đăng nhập để bảo mật tài khoản của bạn.
+                    </p>
+
+                    <p>Trân trọng,<br/>Ban quản trị hệ thống</p>
+
+                    <hr style="border: none; border-top: 1px solid #ccc; margin: 24px 0 8px;">
+                    <p style="font-size: 12px; color: #999; text-align: center;">
+                    Đây là email tự động từ hệ thống <strong>thitracnghiem</strong>, vui lòng không phản hồi.
+                    </p>
+                </div>
+                `,
+
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Mật khẩu mới đã được gửi đến email của bạn!',
+        });
+        } catch (error) {
+        console.error('Lỗi đặt lại mật khẩu:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Lỗi máy chủ!',
+        });
+        }
+    },
 
 
 }
