@@ -4,6 +4,10 @@ require('dotenv').config();
 // Secret key cho JWT
 const nodemailer = require('nodemailer');
 const crypto = require('crypto');
+const { Types} = require('mongoose');
+const mongoose = require('mongoose');
+const User = require("../../model/User");
+
 
 // Tạo transporter để gửi email
 const transporter = nodemailer.createTransport({
@@ -147,25 +151,126 @@ exports.luuKetQuaThi = async (req, res) => {
   }
 };
 
-exports.layKetQuaTheoBoDe = async (req, res) => {
+exports.layKetQuaTheoBoDe1 = async (req, res) => {
   try {
-    const { idBoDe } = req.query;
+    const { idBoDe, search, ngayThi } = req.query;
 
     if (!idBoDe) {
       return res.status(400).json({ message: 'Thiếu id bộ đề' });
     }
 
-    const ketQua = await KetQuaThi.find({ boDe: idBoDe })
-      .populate('nguoiDung') // lấy thêm tên, email người thi
-      .populate('boDe') // lấy tên bộ đề nếu cần
+    const query = { boDe: idBoDe };
+
+    // 📌 Nếu có ngày thi
+    if (ngayThi) {
+        const date = new Date(ngayThi); // "2025-06-22"
+
+        const start = new Date(date);
+        const end = new Date(date);
+
+        // Cộng 1 ngày để lấy đúng mốc giờ Việt Nam (UTC+7)
+        start.setDate(start.getDate() - 1);
+        start.setHours(17, 0, 0, 0); // 00:00 VN = 17:00 hôm trước UTC
+
+        end.setHours(17, 0, 0, 0);   // 00:00 hôm sau VN = 17:00 hôm đó UTC
+
+        query.ngayThi = { $gte: start, $lt: end };
+    }
+
+
+
+    // 📌 Nếu có từ khóa tìm kiếm (search hoTen hoặc email)
+    if (search) {
+      const matchedUsers = await User.find({
+        $or: [
+          { hoTen: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const userIds = matchedUsers.map(user => user._id);
+      query.nguoiDung = { $in: userIds };
+    }
+
+    // 📌 Truy vấn kết quả
+    const ketQua = await KetQuaThi.find(query)
+      .populate('nguoiDung')
+      .populate('boDe')
       .sort({ ngayThi: -1 });
 
     return res.status(200).json({
       message: 'Lấy danh sách kết quả thành công',
-      data: ketQua
+      data: ketQua,
     });
   } catch (error) {
     console.error('Lỗi lấy kết quả theo bộ đề:', error);
     return res.status(500).json({ message: 'Lỗi server' });
   }
 };
+
+exports.layKetQuaTheoBoDe = async (req, res) => {
+  try {
+    const { idBoDe, search, ngayThi, page = 1, limit = 10 } = req.query;
+
+    if (!idBoDe) {
+      return res.status(400).json({ message: 'Thiếu id bộ đề' });
+    }
+
+    const query = { boDe: idBoDe };
+
+    // 📌 Nếu có ngày thi (theo giờ VN)
+    if (ngayThi) {
+      const date = new Date(ngayThi);
+
+      const start = new Date(date);
+      const end = new Date(date);
+
+      start.setDate(start.getDate() - 1);
+      start.setHours(17, 0, 0, 0);
+
+      end.setHours(17, 0, 0, 0);
+
+      query.ngayThi = { $gte: start, $lt: end };
+    }
+
+    // 📌 Nếu có từ khóa tìm kiếm
+    if (search) {
+      const matchedUsers = await User.find({
+        $or: [
+          { hoTen: { $regex: search, $options: 'i' } },
+          { email: { $regex: search, $options: 'i' } },
+        ],
+      }).select('_id');
+
+      const userIds = matchedUsers.map((user) => user._id);
+      query.nguoiDung = { $in: userIds };
+    }
+
+    // Tính số lượng tổng
+    const total = await KetQuaThi.countDocuments(query);
+
+    // 📌 Truy vấn kết quả có phân trang
+    const ketQua = await KetQuaThi.find(query)
+      .populate('nguoiDung')
+      .populate('boDe')
+      .sort({ ngayThi: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    return res.status(200).json({
+      message: 'Lấy danh sách kết quả thành công',
+      data: ketQua,
+      pagination: {
+        total,
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi lấy kết quả theo bộ đề:', error);
+    return res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+
