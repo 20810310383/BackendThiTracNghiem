@@ -39,7 +39,7 @@ const boDeSchema = new mongoose.Schema({
         ref: 'ThoiGianThi', 
     },
     diemMoiCau: { type: Number, default: 0 },                         // Sẽ tự tính khi thêm câu hỏi
-    luotThi: { type: Number, default: 10 },     
+    luotThi: { type: Number, default: 1 },     
 
     phamViShare: { type: Boolean, default: true }, // true: công khai, false: riêng tư
     nguoiTao: { type: mongoose.Schema.Types.ObjectId, ref: 'User', }, // Người tạo bộ đề             

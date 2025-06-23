@@ -27,6 +27,8 @@ exports.luuKetQuaThi = async (req, res) => {
     const boDe = await BoDe.findById(boDeId);
     if (!boDe) return res.status(404).json({ message: 'Bộ đề không tồn tại.' });
 
+    await BoDe.findByIdAndUpdate(boDeId, { $inc: { luotThi: 1 } });
+
     let soCauDung = 0;
     const chiTiet = [];
 
