@@ -132,6 +132,29 @@ module.exports = {
         }
     },
 
+    // POST /api/bode/add-multiple-cau-hoi
+    addMultipleCauHoi: async (req, res) => {
+        const { boDeId, cauHoi } = req.body;
+
+        if (!boDeId || !cauHoi || !Array.isArray(cauHoi)) {
+            return res.status(400).json({ success: false, message: "Thiếu dữ liệu." });
+        }
+
+        try {
+            const boDe = await BoDe.findById(boDeId);
+            if (!boDe) return res.status(404).json({ success: false, message: "Không tìm thấy bộ đề." });
+
+            boDe.cauHoi.push(...cauHoi);
+            await boDe.save();
+
+            res.status(200).json({ success: true, message: "Đã thêm câu hỏi hàng loạt." });
+        } catch (err) {
+            console.error("Lỗi thêm nhanh:", err);
+            res.status(500).json({ success: false, message: "Lỗi server." });
+        }
+    },
+
+
 
     updateProduct: async (req, res) => {
         try {
@@ -158,6 +181,44 @@ module.exports = {
             });
         }
     },
+
+    updateMultipleCauHoi: async (req, res) => {
+    try {
+        const { boDeId, cauHoi } = req.body;
+
+        if (!boDeId || !Array.isArray(cauHoi)) {
+        return res.status(400).json({
+            message: "Thiếu boDeId hoặc danh sách câu hỏi không hợp lệ",
+            success: false,
+        });
+        }
+
+        const updated = await BoDe.updateOne(
+        { _id: boDeId },
+        { $set: { cauHoi: cauHoi } }
+        );
+
+        if (updated.modifiedCount > 0) {
+        return res.status(200).json({
+            message: "Cập nhật câu hỏi thành công",
+            success: true,
+        });
+        } else {
+        return res.status(404).json({
+            message: "Không tìm thấy hoặc không có thay đổi",
+            success: false,
+        });
+        }
+    } catch (error) {
+        console.error("Lỗi updateMultipleCauHoi:", error);
+        return res.status(500).json({
+        message: "Lỗi server khi cập nhật câu hỏi",
+        error: error.message,
+        success: false,
+        });
+    }
+    },
+
 
     deleteBode: async (req, res) => {
         try {

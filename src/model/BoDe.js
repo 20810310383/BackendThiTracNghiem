@@ -48,14 +48,6 @@ const boDeSchema = new mongoose.Schema({
     ngayTao: { type: Date, default: Date.now }
 });
 
-// 🧠 Middleware: tự động tính điểm mỗi câu khi lưu
-// boDeSchema.pre('save', function (next) {
-//     if (this.cauHoi && this.cauHoi.length > 0) {
-//         this.diemMoiCau = +(10 / this.cauHoi.length).toFixed(2); // làm tròn 2 chữ số thập phân
-//     }
-//     next();
-// });
-
 module.exports = mongoose.model('BoDe', boDeSchema);
 
 
