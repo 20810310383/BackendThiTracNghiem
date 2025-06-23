@@ -279,9 +279,14 @@ exports.layKetQuaTheoUser = async (req, res) => {
   try {
     const { userId, search, ngayThi, page = 1, limit = 10 } = req.query;
 
-    const query = {  };
+    const query = {};
 
-    // 📌 Nếu có ngày thi (theo giờ VN)
+    // 📌 Nếu lọc theo người dùng
+    if (userId) {
+      query.nguoiDung = userId;
+    }
+
+    // 📌 Nếu có ngày thi (giờ VN = UTC+7)
     if (ngayThi) {
       const date = new Date(ngayThi);
 
@@ -296,41 +301,36 @@ exports.layKetQuaTheoUser = async (req, res) => {
       query.ngayThi = { $gte: start, $lt: end };
     }
 
-    // 📌 Nếu có từ khóa tìm kiếm
-    if (userId) {      
-        query.nguoiDung = userId;
-    }
-
-    // 📌 Nếu có từ khóa tìm kiếm (tìm theo tên bộ đề hoặc người dùng)
-    if (search) {
-      query.$or = [
-        { 'boDe.ten': new RegExp(search, 'i') },
-      ];
-    }
-
-    // Tính số lượng tổng
-    const total = await KetQuaThi.countDocuments(query);
-
-    // 📌 Truy vấn kết quả có phân trang
-    const ketQua = await KetQuaThi.find(query)
+    // 📌 Truy vấn cơ bản theo người dùng + ngày thi
+    const ketQuaRaw = await KetQuaThi.find(query)
       .populate('nguoiDung')
       .populate('boDe')
-      .sort({ ngayThi: -1 })
-      .skip((parseInt(page) - 1) * parseInt(limit))
-      .limit(parseInt(limit));
+      .sort({ ngayThi: -1 });
+
+    // 📌 Nếu có tìm kiếm theo tên bộ đề
+    const ketQuaFiltered = search
+      ? ketQuaRaw.filter(kq =>
+          kq.boDe?.ten?.toLowerCase().includes(search.toLowerCase())
+        )
+      : ketQuaRaw;
+
+    // 📌 Phân trang
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const ketQuaPage = ketQuaFiltered.slice(startIndex, startIndex + parseInt(limit));
 
     return res.status(200).json({
       message: 'Lấy danh sách kết quả thành công',
-      data: ketQua,
+      data: ketQuaPage,
       pagination: {
-        total,
+        total: ketQuaFiltered.length,
         current: parseInt(page),
         pageSize: parseInt(limit),
-        totalPages: Math.ceil(total / limit),
+        totalPages: Math.ceil(ketQuaFiltered.length / parseInt(limit)),
       },
     });
   } catch (error) {
-    console.error('Lỗi lấy kết quả theo bộ đề:', error);
+    console.error('Lỗi lấy kết quả theo user:', error);
     return res.status(500).json({ message: 'Lỗi server' });
   }
 };
+
