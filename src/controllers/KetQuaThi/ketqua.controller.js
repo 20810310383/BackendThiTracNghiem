@@ -275,4 +275,62 @@ exports.layKetQuaTheoBoDe = async (req, res) => {
   }
 };
 
+exports.layKetQuaTheoUser = async (req, res) => {
+  try {
+    const { userId, search, ngayThi, page = 1, limit = 10 } = req.query;
 
+    const query = {  };
+
+    // 📌 Nếu có ngày thi (theo giờ VN)
+    if (ngayThi) {
+      const date = new Date(ngayThi);
+
+      const start = new Date(date);
+      const end = new Date(date);
+
+      start.setDate(start.getDate() - 1);
+      start.setHours(17, 0, 0, 0);
+
+      end.setHours(17, 0, 0, 0);
+
+      query.ngayThi = { $gte: start, $lt: end };
+    }
+
+    // 📌 Nếu có từ khóa tìm kiếm
+    if (userId) {      
+        query.nguoiDung = userId;
+    }
+
+    // 📌 Nếu có từ khóa tìm kiếm (tìm theo tên bộ đề hoặc người dùng)
+    if (search) {
+      query.$or = [
+        { 'boDe.ten': new RegExp(search, 'i') },
+      ];
+    }
+
+    // Tính số lượng tổng
+    const total = await KetQuaThi.countDocuments(query);
+
+    // 📌 Truy vấn kết quả có phân trang
+    const ketQua = await KetQuaThi.find(query)
+      .populate('nguoiDung')
+      .populate('boDe')
+      .sort({ ngayThi: -1 })
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .limit(parseInt(limit));
+
+    return res.status(200).json({
+      message: 'Lấy danh sách kết quả thành công',
+      data: ketQua,
+      pagination: {
+        total,
+        current: parseInt(page),
+        pageSize: parseInt(limit),
+        totalPages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error) {
+    console.error('Lỗi lấy kết quả theo bộ đề:', error);
+    return res.status(500).json({ message: 'Lỗi server' });
+  }
+};
