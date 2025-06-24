@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 const chiTietCauHoiSchema = new mongoose.Schema({
   cauHoiId: { type: mongoose.Schema.Types.ObjectId,  },
   cauHoiNoiDung: {type: String},
+  ImageNoiDung: { type: String, },
   dapAnChon: {
     ma: { type: String,  },
     noiDung: { type: String,  }

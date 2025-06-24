@@ -7,6 +7,7 @@ const crypto = require('crypto');
 const { Types} = require('mongoose');
 const mongoose = require('mongoose');
 const User = require("../../model/User");
+const { log } = require("console");
 
 
 // Tạo transporter để gửi email
@@ -34,6 +35,8 @@ exports.luuKetQuaThi = async (req, res) => {
 
     // Duyệt từng câu hỏi trong bộ đề
     boDe.cauHoi.forEach((cauHoi) => {
+        console.log("cauhoi: ", cauHoi);
+        
         const luaChon = dapAnDaChon.find(d => d.cauHoiId === cauHoi._id.toString());        
         const dapAnDung = cauHoi.dapAn.find(d => d.isDung === true);
         const dapAnChonObj = luaChon
@@ -50,6 +53,7 @@ exports.luuKetQuaThi = async (req, res) => {
 
         chiTiet.push({
             cauHoiId: cauHoi._id,
+            ImageNoiDung: cauHoi.ImageNoiDung,
             cauHoiNoiDung: cauHoi.noiDung,
             dapAnChon: dapAnChonObj,
             dapAnDung: {
@@ -104,7 +108,8 @@ exports.luuKetQuaThi = async (req, res) => {
 
             emailContent += `
                 <li style="margin-bottom: 16px; background: ${background}; border-left: 4px solid ${border}; padding: 12px; border-radius: 6px;">
-                <p><strong>📝 Câu hỏi:</strong> ${cau.cauHoiNoiDung}</p>
+                <p><strong>📝 Câu hỏi:</strong> ${cau.cauHoiNoiDung}</p> <br/>
+                ${cau.ImageNoiDung ? `<img src="${cau.ImageNoiDung}" style="height: 100px;" />` : ""}
                 ${
                     cau.dapAnChon?.ma
                     ? `
