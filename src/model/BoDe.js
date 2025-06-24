@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 // Schema đáp án cho mỗi câu hỏi
 const dapAnSchema = new mongoose.Schema({
-    ma: { type: String, required: true },            // Ví dụ: "A", "B"
+    ma: { type: String, required: true },            // Ví dụ: "A", "B"               
     noiDung: { type: String, required: true },
     isDung: { type: Boolean, default: false },
     giaiThich: { type: String, default: '' }
@@ -11,6 +11,7 @@ const dapAnSchema = new mongoose.Schema({
 // Schema câu hỏi
 const cauHoiSchema = new mongoose.Schema({
     noiDung: { type: String, required: true },
+    ImageNoiDung: { type: String, },
     dapAn: [dapAnSchema],
     mucDo: {
         type: String,
