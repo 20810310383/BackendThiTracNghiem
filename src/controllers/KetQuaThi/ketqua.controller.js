@@ -40,9 +40,16 @@ exports.luuKetQuaThi = async (req, res) => {
 
         const dapAnDung = cauHoi.dapAn.find((d) => d.isDung);
         const dapAnChon = luaChon?.dapAnChon || null;
-        const dapAnChonObj = cauHoi.dapAn.find(d => d.ma === dapAnChon);
 
-        const isDung = dapAnChon === dapAnDung?.ma;
+        const dapAnChonObj = dapAnChon
+        ? cauHoi.dapAn.find((d) => d.ma === dapAnChon.ma)
+        : null;        
+
+        console.log("dapAnChon: ", dapAnChon);
+        console.log("dapAnChonObj: ", dapAnChonObj);
+        
+
+        const isDung = dapAnChon?.ma === dapAnDung?.ma;
 
         chiTiet.push({
             cauHoiId: cauHoi._id,
@@ -59,9 +66,9 @@ exports.luuKetQuaThi = async (req, res) => {
             },
             isDung: isDung,
             cacDapAn: cauHoi.dapAn.map((d) => ({
-            ma: d.ma,
-            noiDung: d.noiDung,
-            isDung: d.isDung,
+                ma: d.ma,
+                noiDung: d.noiDung,
+                isDung: d.isDung,
             })),
         });
 

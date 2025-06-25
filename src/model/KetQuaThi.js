@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const dapAnSchema = new mongoose.Schema({
-  ma: { type: String, required: true },
-  noiDung: { type: String, required: true },
+  ma: { type: String, required: false },
+  noiDung: { type: String, required: false },
   isDung: { type: Boolean, default: false },
 });
 
