@@ -55,6 +55,7 @@ exports.luuKetQuaThi = async (req, res) => {
             cauHoiId: cauHoi._id,
             ImageNoiDung: cauHoi.ImageNoiDung,
             cauHoiNoiDung: cauHoi.noiDung,
+            giaiThich: cauHoi.giaiThich,
             dapAnChon: dapAnChonObj,
             dapAnDung: {
                 ma: dapAnDung?.ma,
