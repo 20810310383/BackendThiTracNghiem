@@ -12,6 +12,7 @@ const dapAnSchema = new mongoose.Schema({
 const cauHoiSchema = new mongoose.Schema({
     noiDung: { type: String, required: true },
     ImageNoiDung: { type: String, },
+    giaiThich: { type: String, },
     dapAn: [dapAnSchema],
     mucDo: {
         type: String,
