@@ -1,5 +1,11 @@
 const mongoose = require('mongoose');
 
+const dapAnSchema = new mongoose.Schema({
+  ma: { type: String, required: true },
+  noiDung: { type: String, required: true },
+  isDung: { type: Boolean, default: false },
+});
+
 // Schema lưu chi tiết từng câu hỏi đã làm trong bài thi
 const chiTietCauHoiSchema = new mongoose.Schema({
   cauHoiId: { type: mongoose.Schema.Types.ObjectId,  },
@@ -14,6 +20,7 @@ const chiTietCauHoiSchema = new mongoose.Schema({
     ma: { type: String,  },
     noiDung: { type: String,  }
   },
+  cacDapAn: [dapAnSchema],
   isDung: { type: Boolean,  }
 });
 

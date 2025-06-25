@@ -21,6 +21,139 @@ const transporter = nodemailer.createTransport({
 
 exports.luuKetQuaThi = async (req, res) => {
   try {
+    const { boDeId, dapAnDaChon, thoiGianLam, emailUser, _idUser } = req.body;
+
+    const boDe = await BoDe.findById(boDeId);
+    if (!boDe) return res.status(404).json({ message: 'Bộ đề không tồn tại.' });
+
+    await BoDe.findByIdAndUpdate(boDeId, { $inc: { luotThi: 1 } });
+
+    let soCauDung = 0;
+    const chiTiet = [];
+
+    boDe.cauHoi.forEach((cauHoi) => {
+        const luaChon = dapAnDaChon.find(
+            (d) => d.cauHoiId === cauHoi._id.toString()
+        );
+        console.log("luaChon: ", luaChon);
+        
+
+        const dapAnDung = cauHoi.dapAn.find((d) => d.isDung);
+        const dapAnChon = luaChon?.dapAnChon || null;
+        const dapAnChonObj = cauHoi.dapAn.find(d => d.ma === dapAnChon);
+
+        const isDung = dapAnChon === dapAnDung?.ma;
+
+        chiTiet.push({
+            cauHoiId: cauHoi._id,
+            cauHoiNoiDung: cauHoi.noiDung,
+            giaiThich: cauHoi.giaiThich,
+            ImageNoiDung: cauHoi.ImageNoiDung || null,
+            dapAnChon: {
+                ma: dapAnChonObj?.ma || '',
+                noiDung: dapAnChonObj?.noiDung || 'Không chọn đáp án'
+            },
+            dapAnDung: {
+                ma: dapAnDung?.ma || '',
+                noiDung: dapAnDung?.noiDung || ''
+            },
+            isDung: isDung,
+            cacDapAn: cauHoi.dapAn.map((d) => ({
+            ma: d.ma,
+            noiDung: d.noiDung,
+            isDung: d.isDung,
+            })),
+        });
+
+         if (isDung) soCauDung++;
+    });
+
+    const soCauSai = boDe.cauHoi.length - soCauDung;
+    const diem = +((soCauDung / boDe.cauHoi.length) * 10).toFixed(2);
+
+    const ketQua = new KetQuaThi({
+      nguoiDung: _idUser,
+      boDe: boDeId,
+      soCauDung,
+      soCauSai,
+      diem,
+      thoiGianLam,
+      chiTiet,
+    });
+
+    await ketQua.save();
+
+    // --- GỬI EMAIL (nếu có)
+    // if (emailUser) {
+    //   let emailContent = `
+    //     <div style="max-width:700px;margin:auto;font-family:Arial,sans-serif;padding:30px;background:#fff;border-radius:10px;box-shadow:0 0 15px rgba(0,0,0,0.1);">
+    //       <h2 style="text-align:center;color:#1890ff;border-bottom:2px solid #e6f7ff;padding-bottom:10px;">
+    //         ✅ KẾT QUẢ BÀI THI: ${boDe.ten}
+    //       </h2>
+    //       <div style="font-size:16px;color:#333;line-height:1.6;">
+    //         <p><strong>📌 Điểm:</strong> <span style="font-size:20px;color:#f5222d;font-weight:bold;">${diem}/10</span></p>
+    //         <p><strong>⏱️ Thời gian làm bài:</strong> ${thoiGianLam}</p>
+    //         <p><strong>✅ Số câu đúng:</strong> ${soCauDung} / ${boDe.cauHoi.length}</p>
+    //       </div>
+    //       <hr style="margin:24px 0;border-top:1px dashed #ccc;" />
+    //       <h3 style="color:#13c2c2;">📋 Chi tiết từng câu hỏi:</h3>
+    //       <ol>
+    //   `;
+
+    //   chiTiet.forEach((cau) => {
+    //     const bg = cau.isDung ? '#f6ffed' : '#fff1f0';
+    //     const border = cau.isDung ? '#b7eb8f' : '#ffa39e';
+    //     const dapAnDung = cau.cacDapAn.find((d) => d.isDung);
+    //     const dapAnChonObj = cau.cacDapAn.find(
+    //       (d) => d.ma === cau.dapAnDaChon
+    //     );
+
+    //     emailContent += `
+    //       <li style="margin-bottom:16px;background:${bg};border-left:4px solid ${border};padding:12px;border-radius:6px;">
+    //         <p><strong>📝 Câu hỏi:</strong> ${cau.cauHoiNoiDung}</p>
+    //         ${cau.ImageNoiDung ? `<img src="${cau.ImageNoiDung}" style="height: 100px; margin-top: 6px;" />` : ""}
+    //         ${cau.dapAnDaChon ? `
+    //           <p><strong>🔸 Bạn chọn:</strong> 
+    //             <span style="color:${cau.isDung ? 'green' : 'red'};font-weight:bold;">
+    //               ${dapAnChonObj?.ma}. ${dapAnChonObj?.noiDung} ${cau.isDung ? '✅ Đúng' : '❌ Sai'}
+    //             </span>
+    //           </p>
+    //           <p><strong>✔️ Đáp án đúng:</strong> ${dapAnDung?.ma}. ${dapAnDung?.noiDung}</p>
+    //         ` : `<p style="color:orange;"><strong>⚠️ Bạn chưa chọn đáp án</strong></p>`}
+    //         ${cau.giaiThich ? `<p style="margin-top:6px;"><strong>📚 Giải thích:</strong> ${cau.giaiThich}</p>` : ""}
+    //       </li>
+    //     `;
+    //   });
+
+    //   emailContent += `
+    //       </ol>
+    //       <p style="text-align:center;font-size:14px;color:#888;margin-top:40px;">
+    //         Cảm ơn bạn đã làm bài cùng <strong>KTQuiz</strong> 💙
+    //       </p>
+    //     </div>
+    //   `;
+
+    //   await transporter.sendMail({
+    //     from: `"KTQuiz" <${process.env.EMAIL_USER}>`,
+    //     to: emailUser,
+    //     subject: `📨 Kết quả bài thi: ${boDe.ten}`,
+    //     html: emailContent,
+    //   });
+    // }
+
+    res.status(201).json({
+      message: 'Lưu kết quả thành công',
+      ketQua,
+    });
+  } catch (error) {
+    console.error("Lỗi lưu kết quả:", error);
+    res.status(500).json({ message: 'Lỗi server' });
+  }
+};
+
+
+exports.luuKetQuaThiTest = async (req, res) => {
+  try {
     const { boDeId, dapAnDaChon, thoiGianLam, emailUser } = req.body;
     // const nguoiDungId = req.user._id || req.user.id || req.body._idUser; // lấy từ token xác thực
     const nguoiDungId = req.body._idUser; // lấy từ token xác thực
