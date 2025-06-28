@@ -8,6 +8,7 @@ const capHoc = require('./routes/caphocRouter');
 const monHoc = require('./routes/monhocRouter'); 
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/user');
+const commentRoutes = require('./routes/comment');
 const ketquaRoutes = require('./routes/ketqua');
 const aiSuggestRouter = require('./routes/aiSuggest');
 const webhookRoute = require('./routes/webhook');
@@ -73,6 +74,7 @@ const routes = [
     { path: '/api/mon-hoc', router: monHoc },
     { path: '/api/auth', router: authRoutes },
     { path: '/api/user', router: userRoutes },
+    { path: '/api/comment', router: commentRoutes },
     { path: '/api/ketqua', router: ketquaRoutes },
     { path: '/api/chatgpt', router: aiSuggestRouter },
 ];
