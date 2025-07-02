@@ -423,13 +423,17 @@ exports.layKetQuaTheoBoDe = async (req, res) => {
 
 exports.layKetQuaTheoUser = async (req, res) => {
   try {
-    const { userId, search, ngayThi, page = 1, limit = 10 } = req.query;
+    const { userId, search, ngayThi, page = 1, limit = 10, boDeId } = req.query;
 
     const query = {};
 
     // 📌 Nếu lọc theo người dùng
     if (userId) {
       query.nguoiDung = userId;
+    }
+
+    if (boDeId) {
+      query.boDe = boDeId;
     }
 
     // 📌 Nếu có ngày thi (giờ VN = UTC+7)
